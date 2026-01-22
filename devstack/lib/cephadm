@@ -447,7 +447,7 @@ function configure_rgw_ceph_section {
     # RGW KEYSTONE KEYS
     declare -A RGW_CONFIG_KEYS
 
-    RGW_CONFIG_KEYS=(['rgw_keystone_api_version']=3
+    RGW_CONFIG_KEYS=(
         ['rgw_keystone_url']="$KEYSTONE_SERVICE_URI"
         ['rgw_keystone_accepted_roles']="member, _member_, Member, admin"
         ['rgw_keystone_accepted_admin_roles']="ResellerAdmin"
@@ -470,6 +470,13 @@ function configure_rgw_ceph_section {
     for k in ${!RGW_CONFIG_KEYS[@]}; do
         set_config_key "global" ${k} ${RGW_CONFIG_KEYS[$k]}
     done
+    
+    # Init RadosGW Realm, Zonegroup and zone
+    rgw_endpoint="$SWIFT_SERVICE_PROTOCOL://$SERVICE_HOST:${CEPH_RGW_PORT}"
+    $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG radosgw-admin realm create --rgw-realm=default --default
+    $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG radosgw-admin zonegroup create --rgw-zonegroup=default --master --endpoints=$rgw_endpoint --rgw-realm=default --default
+    $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG radosgw-admin zone create --rgw-zonegroup=default --rgw-zone=default --default
+    $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG radosgw-admin period update --commit
 }
 
 # Deploy rbd-mirror on the current site
@@ -497,7 +504,7 @@ function rgw {
     configure_ceph_embedded_rgw
 
     $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG \
-        --keyring $CEPH_KEYRING -- ceph orch apply rgw default default default default \
+        --keyring $CEPH_KEYRING -- ceph orch apply rgw default --realm=default --zonegroup=default --zone=default \
         "--placement=$HOSTNAME count:1" --port "$RGW_PORT"
 
     configure_rgw_ceph_section
