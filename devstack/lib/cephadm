@@ -508,6 +508,11 @@ function rgw {
         "--placement=$HOSTNAME count:1" --port "$RGW_PORT"
 
     configure_rgw_ceph_section
+
+    $SUDO "$CEPHADM" shell --fsid $FSID --config $CEPH_CONFIG \
+        --keyring $CEPH_KEYRING -- ceph orch restart rgw.default
+
+    sleep 10
 }
 
 # TODO: (fpantano) Remove this hack
