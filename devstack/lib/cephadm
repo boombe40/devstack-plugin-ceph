@@ -458,6 +458,7 @@ function configure_rgw_ceph_section {
         ['rgw_keystone_admin_password']="$SERVICE_PASSWORD"
         ['rgw_keystone_verify_ssl']="false"
         ['rgw_keystone_implicit_tenants']="true"
+        ['rgw_swift_account_in_url']="false"
         ['rgw_swift_versioning_enabled']="true"
         ['rgw_swift_enforce_content_length']="true"
         ['rgw_swift_account_in_url']="true"
